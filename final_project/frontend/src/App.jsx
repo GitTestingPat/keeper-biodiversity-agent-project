@@ -1,45 +1,134 @@
-import React from 'react';
-import { CopilotKit } from "@copilotkit/react-core";
-import "@copilotkit/react-ui/styles.css";
-import "./index.css";
-import ChatInterface from './ChatInterface';
+// frontend/src/App.jsx
+import { useState } from 'react'
 
 function App() {
+  const [messages, setMessages] = useState([])
+  const [input, setInput] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  const sendMessage = async (e) => {
+    e.preventDefault()
+    if (!input.trim()) return
+
+    const userMessage = input.trim()
+    setMessages(prev => [...prev, { role: 'user', content: userMessage }])
+    setInput('')
+    setLoading(true)
+
+    try {
+      const response = await fetch('http://localhost:8000/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: userMessage,
+          session_id: 'default'
+        })
+      })
+
+      const data = await response.json()
+      
+      if (data.success) {
+        setMessages(prev => [...prev, { 
+          role: 'assistant', 
+          content: data.response 
+        }])
+      } else {
+        setMessages(prev => [...prev, { 
+          role: 'system', 
+          content: `Error: ${data.error}` 
+        }])
+      }
+    } catch (error) {
+      setMessages(prev => [...prev, { 
+        role: 'system', 
+        content: `Error de conexión: ${error.message}` 
+      }])
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-indigo-950 via-slate-900 to-emerald-950 items-center justify-center p-2 md:p-6 overflow-hidden">
-      <header className="mb-4 mt-2 text-center max-w-4xl animate-fade-in-down z-10">
-        <div className="flex items-center justify-center gap-3 mb-2">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-2xl shadow-lg shadow-emerald-500/30">
-            🛡️
-          </div>
-          <h1 className="text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-teal-200 to-emerald-200 tracking-tight drop-shadow-md">
-            Biodiversity Sentinel
-          </h1>
-        </div>
-        <p className="text-emerald-100/70 text-sm md:text-base font-medium leading-relaxed max-w-2xl mx-auto">
-          Real-time AI monitoring for deforestation, illegal fishing, and poaching
-          using satellite imagery and sensor networks.
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex flex-col">
+      {/* Header */}
+      <header className="p-6 text-center">
+        <h1 className="text-4xl font-bold text-emerald-400 mb-2">
+          🌿 Biodiversity Sentinel
+        </h1>
+        <p className="text-gray-300">
+          Monitoreo en tiempo real con IA para conservación
         </p>
       </header>
 
-      {/* Decorative background blobs */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-emerald-600/10 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-indigo-600/10 blur-[120px] pointer-events-none" />
+      {/* Chat Container */}
+      <div className="flex-1 max-w-4xl mx-auto w-full px-4 pb-4">
+        <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl border border-slate-700 h-[600px] overflow-y-auto p-4 space-y-4">
+          {messages.length === 0 && (
+            <div className="text-center text-gray-400 mt-32">
+              <p className="text-xl mb-2">👋 ¡Bienvenido!</p>
+              <p>Pregúntame sobre:</p>
+              <ul className="mt-4 space-y-2 text-sm">
+                <li>🛰️ Análisis de deforestación</li>
+                <li>🌊 Detección de pesca ilegal</li>
+                <li>🦁 Monitoreo de vida silvestre</li>
+                <li>📊 Reportes de conservación</li>
+              </ul>
+            </div>
+          )}
+          
+          {messages.map((msg, idx) => (
+            <div
+              key={idx}
+              className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+            >
+              <div
+                className={`max-w-[80%] rounded-2xl px-4 py-2 ${
+                  msg.role === 'user'
+                    ? 'bg-emerald-600 text-white'
+                    : msg.role === 'system'
+                    ? 'bg-red-600/20 border border-red-500 text-red-200'
+                    : 'bg-slate-700 text-gray-100'
+                }`}
+              >
+                <p className="whitespace-pre-wrap">{msg.content}</p>
+              </div>
+            </div>
+          ))}
+          
+          {loading && (
+            <div className="flex justify-start">
+              <div className="bg-slate-700 rounded-2xl px-4 py-2">
+                <div className="flex space-x-2">
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
 
-      <main className="w-full max-w-[1400px] h-[80vh] flex flex-col rounded-[2.5rem] overflow-hidden shadow-[0_20px_80px_rgba(0,0,0,0.4)] border border-white/5 bg-slate-900/40 backdrop-blur-2xl z-10 relative">
-        {/* CopilotKit runtime — keeps SDK hooks + telemetry active.
-            The pre-built CopilotChat UI widget is replaced by our custom ChatInterface. */}
-        <CopilotKit runtimeUrl="http://127.0.0.1:8000/chat">
-          <ChatInterface />
-        </CopilotKit>
-      </main>
-
-      {/* Footer: branding text removed per requirements */}
-      <footer className="mt-4 text-xs text-slate-500/50 font-medium tracking-wide select-none z-10" aria-hidden="true">
-        Biodiversity Sentinel v1.0
-      </footer>
+        {/* Input Form */}
+        <form onSubmit={sendMessage} className="mt-4 flex gap-2">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Describe tu consulta sobre biodiversidad..."
+            className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            disabled={loading}
+          />
+          <button
+            type="submit"
+            disabled={loading}
+            className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-600 text-white px-6 py-3 rounded-xl font-semibold transition-colors"
+          >
+            {loading ? '⏳' : 'Enviar'}
+          </button>
+        </form>
+      </div>
     </div>
-  );
+  )
 }
 
-export default App;
+export default App
