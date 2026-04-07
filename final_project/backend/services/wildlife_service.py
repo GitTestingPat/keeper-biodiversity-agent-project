@@ -1,47 +1,49 @@
 """
-Servicio para conectar con APIs reales de cámaras trampa y monitoreo de vida silvestre.
+Servicio para conectar con APIs reales de cámaras trampa y monitoreo
+de vida silvestre.
 Soporta: Wildlife Insights, Snapshot Safari, TrailGuard AI.
 """
 import aiohttp
-from typing import Optional, List
+from typing import Optional
 from datetime import datetime
 from config.settings import settings
 
 
 class WildlifeService:
     """Servicio para análisis de cámaras trampa y monitoreo de fauna."""
-    
+
     # Endpoints de APIs públicas
     WILDLIFE_INSIGHTS_ENDPOINT = "https://api.wildlifeinsights.org/v1"
     TRAILGUARD_ENDPOINT = "https://api.trailguard.ai/v1"
-    
+
     def __init__(self):
         self.api_key = settings.WILDLIFE_CAMS_API_KEY
         self.session: Optional[aiohttp.ClientSession] = None
-    
+
     async def _get_session(self) -> aiohttp.ClientSession:
         """Obtiene o crea una sesión HTTP asíncrona."""
         if self.session is None or self.session.closed:
             self.session = aiohttp.ClientSession(
                 headers={
-                    "Authorization": f"Bearer {self.api_key}" if self.api_key else "",
+                    "Authorization": f"Bearer {self.api_key}"
+                    if self.api_key else "",
                     "User-Agent": "BiodiversityAgent/1.0"
                 }
             )
         return self.session
-    
+
     async def close(self):
         """Cierra la sesión HTTP."""
         if self.session and not self.session.closed:
             await self.session.close()
-    
+
     async def analyze_camera_traps(self, park_name: str) -> dict:
         """
         Analiza imágenes de cámaras trampa en un parque nacional.
-        
+
         Args:
             park_name: Nombre del parque nacional
-            
+
         Returns:
             Dict con análisis de actividad wildlife y detección de intrusos
         """
@@ -60,7 +62,8 @@ class WildlifeService:
                 "country": "South Africa",
                 "lat": -23.9884,
                 "lon": 31.5547,
-                "key_species": ["lion", "rhino", "elephant", "buffalo", "leopard"],
+                "key_species": ["lion", "rhino", "elephant", "buffalo",
+                                "leopard"],
                 "threat_level": "HIGH"
             },
             "yasuni": {
@@ -80,15 +83,15 @@ class WildlifeService:
                 "threat_level": "MEDIUM"
             }
         }
-        
+
         park_lower = park_name.lower()
         park_info = None
-        
+
         for key, value in parks_database.items():
             if key in park_lower:
                 park_info = value
                 break
-        
+
         if not park_info:
             park_info = {
                 "name": park_name,
@@ -98,8 +101,9 @@ class WildlifeService:
                 "key_species": [],
                 "threat_level": "UNKNOWN"
             }
-        
-        # Simulación de análisis de cámaras (en producción, conectar a API real)
+
+        # Simulación de análisis de cámaras (en producción,
+        # conectar a API real)
         response_data = {
             "location": {
                 "park": park_info["name"],
@@ -129,10 +133,11 @@ class WildlifeService:
             },
             "raw_data_available": bool(self.api_key)
         }
-        
+
         # Generar alertas basadas en patrones sospechosos
         if park_info["threat_level"] in ["HIGH", "CRITICAL"]:
-            # Simular detección de actividad sospechosa en parques de alto riesgo
+            # Simular detección de actividad sospechosa en parques
+            # de alto riesgo
             import random
             if random.random() > 0.6:  # 40% de probabilidad de detección
                 response_data["camera_analysis"]["human_detections"].append({
@@ -140,27 +145,29 @@ class WildlifeService:
                     "location": "Sector Norte",
                     "activity": "UNAUTHORIZED_PRESENCE",
                     "confidence": 0.78,
-                    "details": "Individuals detected carrying equipment consistent with poaching activities"
+                    "details": "Individuals detected carrying equipment"
+                    "consistent with poaching activities"
                 })
                 response_data["assessment"]["alerts"].append({
                     "type": "POTENTIAL_POACHING",
                     "severity": "HIGH",
-                    "description": "Unauthorized human activity detected in protected zone"
+                    "description": "Unauthorized human activity detected in "
+                    "protected zone"
                 })
                 response_data["assessment"]["recommendations"].append(
                     "Deploy ranger patrol to Sector Norte immediately"
                 )
-        
+
         return response_data
-    
+
     async def get_species_activity(self, park_name: str, species: str) -> dict:
         """
         Obtiene patrones de actividad para una especie específica.
-        
+
         Args:
             park_name: Nombre del parque
             species: Nombre de la especie a monitorear
-            
+
         Returns:
             Dict con patrones de actividad de la especie
         """
