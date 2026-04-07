@@ -5,7 +5,6 @@ from pydantic import BaseModel
 from langchain_core.messages import HumanMessage
 from config.settings import settings
 from agent import agent
-from final_project.backend.tools import TOOLS_REGISTRY
 
 app = FastAPI(title="Biodiversity Agent")
 
@@ -49,18 +48,13 @@ async def list_tools():
     """Lista las herramientas disponibles"""
     return {
         "tools": [
-            {"name": t.name, "description": t.description}
+            {"name": t.name, "description": t.description} 
             for t in TOOLS_REGISTRY if hasattr(
-                t, 'name'
-            )
+                t, 'name')
         ]
     }
 
 if __name__ == "__main__":
     import uvicorn
-    print(f"🌱 Biodiversity Agent corriendo en http://{settings.HOST}:{
-        settings.PORT}"
-    )
-    uvicorn.run(
-        "main:app", host=settings.HOST, port=settings.PORT, reload=True
-    )
+    print(f"🌱 Biodiversity Agent corriendo en http://{settings.HOST}:{settings.PORT}")
+    uvicorn.run("main:app", host=settings.HOST, port=settings.PORT, reload=True)

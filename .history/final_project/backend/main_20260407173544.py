@@ -5,7 +5,6 @@ from pydantic import BaseModel
 from langchain_core.messages import HumanMessage
 from config.settings import settings
 from agent import agent
-from final_project.backend.tools import TOOLS_REGISTRY
 
 app = FastAPI(title="Biodiversity Agent")
 

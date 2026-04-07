@@ -5,7 +5,6 @@ from pydantic import BaseModel
 from langchain_core.messages import HumanMessage
 from config.settings import settings
 from agent import agent
-from final_project.backend.tools import TOOLS_REGISTRY
 
 app = FastAPI(title="Biodiversity Agent")
 
@@ -61,6 +60,5 @@ if __name__ == "__main__":
     print(f"🌱 Biodiversity Agent corriendo en http://{settings.HOST}:{
         settings.PORT}"
     )
-    uvicorn.run(
-        "main:app", host=settings.HOST, port=settings.PORT, reload=True
-    )
+    uvicorn.run("main:app", host=settings.HOST, port=settings.PORT, reload=True)
+    
