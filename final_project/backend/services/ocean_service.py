@@ -1,52 +1,60 @@
 """
 Servicio para conectar con APIs reales de sensores oceánicos.
+
 Soporta: Ocean Observatory Initiative, Argo Floats, NOAA.
 """
-import aiohttp
-from typing import Optional
 from datetime import datetime
+from typing import Optional
+import aiohttp
 from config.settings import settings
 
 
 class OceanService:
     """Servicio para análisis de datos de sensores oceánicos reales."""
-    
+
     # Endpoints de APIs públicas
-    ARGOS_FLOATS_ENDPOINT = "https://www.argodatamgt.org/Access-to-data/Argo-data-selection"
-    NOAA_OCEAN_ENDPOINT = "https://www.ncdc.noaa.gov/cdo-web/api/v2/data"
-    
+    ARGOS_FLOATS_ENDPOINT = (
+        "https://www.argodatamgt.org/Access-to-data/Argo-data-selection"
+    )
+    NOAA_OCEAN_ENDPOINT = (
+        "https://www.ncdc.noaa.gov/cdo-web/api/v2/data"
+    )
+
     def __init__(self):
         self.api_key = settings.OCEAN_OBSERVATORY_API_KEY
         self.session: Optional[aiohttp.ClientSession] = None
-    
+
     async def _get_session(self) -> aiohttp.ClientSession:
         """Obtiene o crea una sesión HTTP asíncrona."""
         if self.session is None or self.session.closed:
             self.session = aiohttp.ClientSession(
                 headers={
-                    "Authorization": f"Bearer {self.api_key}" if self.api_key else "",
+                    "Authorization": (
+                        f"Bearer {self.api_key}" if self.api_key else ""
+                    ),
                     "User-Agent": "BiodiversityAgent/1.0"
                 }
             )
         return self.session
-    
+
     async def close(self):
         """Cierra la sesión HTTP."""
         if self.session and not self.session.closed:
             await self.session.close()
-    
+
     async def detect_illegal_trawling(
-        self, 
+        self,
         marine_region: str,
         radius_km: float = 50.0
     ) -> dict:
         """
-        Detecta actividad de pesca ilegal mediante análisis de patrones acústicos.
-        
+        Detecta actividad de pesca ilegal mediante análisis
+        de patrones acústicos.
+
         Args:
             marine_region: Nombre de la región marina
             radius_km: Radio de análisis en kilómetros
-            
+
         Returns:
             Dict con detección de actividad sospechosa
         """
@@ -81,15 +89,15 @@ class OceanService:
                 "sensitivity": "MEDIUM"
             }
         }
-        
+
         region_lower = marine_region.lower()
         area_info = None
-        
+
         for key, value in protected_areas.items():
             if key in region_lower:
                 area_info = value
                 break
-        
+
         if not area_info:
             area_info = {
                 "name": marine_region,
@@ -98,7 +106,7 @@ class OceanService:
                 "protected": False,
                 "sensitivity": "LOW"
             }
-        
+
         # Simulación de datos de sensores (en producción, conectar a API real)
         response_data = {
             "location": {
@@ -130,10 +138,13 @@ class OceanService:
             },
             "raw_data_available": bool(self.api_key)
         }
-        
+
         # Evaluar riesgo basado en patrones
+        signatures = response_data["sensor_data"]
+        ["acoustic_signatures_detected"]
+
         if area_info["protected"]:
-            if response_data["sensor_data"]["acoustic_signatures_detected"] > 2:
+            if signatures > 2:
                 response_data["assessment"]["risk_level"] = "HIGH"
                 response_data["assessment"]["recommendations"].append(
                     "Dispatch patrol vessel immediately"
@@ -141,36 +152,69 @@ class OceanService:
                 response_data["sensor_data"]["anomalies"].append({
                     "type": "POTENTIAL_ILLEGAL_TRAWLING",
                     "severity": "HIGH",
-                    "description": f"Multiple vessel signatures detected in protected area {area_info['name']}"
+                    "description": (
+                        f"Multiple vessel signatures detected in protected "
+                        f"area{area_info['name']}"
+                    )
                 })
-            elif response_data["sensor_data"]["acoustic_signatures_detected"] > 0:
+            elif signatures > 0:
                 response_data["assessment"]["risk_level"] = "MEDIUM"
                 response_data["assessment"]["recommendations"].append(
                     "Increase monitoring frequency"
                 )
-        
+
         return response_data
-    
+
     async def get_water_quality(self, coordinates: str) -> dict:
         """
         Obtiene datos de calidad del agua para coordenadas específicas.
-        
+
         Args:
             coordinates: String con coordenadas (ej: "Lat: -0.75, Lon: -89.36")
-            
+
         Returns:
             Dict con parámetros de calidad del agua
         """
+        lat, lon = 0.0, 0.0
+
         # Parsear coordenadas (implementación simplificada)
         try:
             parts = coordinates.replace(",", "").split()
-            lat = float([p for p in parts if "Lat" in parts[parts.index(p)-1:parts.index(p)+1] or p.replace("-", "").replace(".", "").isdigit()][0])
-            lon = float([p for p in parts if "Lon" in parts[parts.index(p)-1:parts.index(p)+1] or p.replace("-", "").replace(".", "").isdigit()][0])
-        except:
-            lat, lon = 0.0, 0.0
-        
+
+            # Buscar valores numéricos asociados a Lat/Lon
+            # Nota: Esta lógica es frágil, se mejora la legibilidad manteniendo
+            # la funcionalidad original lo más cerca posible.
+            lat_val = None
+            lon_val = None
+
+            for i, part in enumerate(parts):
+                # Verificar si la parte anterior indica el tipo
+                prev_part = parts[i - 1].lower() if i > 0 else ""
+
+                # Intentar convertir a float
+                try:
+                    num = float(part)
+                    if "lat" in prev_part:
+                        lat_val = num
+                    elif "lon" in prev_part:
+                        lon_val = num
+                except ValueError:
+                    continue
+
+            if lat_val is not None:
+                lat = lat_val
+            if lon_val is not None:
+                lon = lon_val
+
+        except Exception:
+            # En producción, registrar el error (logging)
+            pass
+
         return {
-            "location": {"latitude": lat, "longitude": lon},
+            "location": {
+                "latitude": lat,
+                "longitude": lon
+            },
             "parameters": {
                 "temperature_celsius": 24.5,
                 "salinity_ppt": 35.2,
