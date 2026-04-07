@@ -67,10 +67,8 @@ class Settings:
 
         if not cls.AI_MODEL.startswith("openai:"):
             print(f"⚠️ Advertencia: El modelo actual es {cls.AI_MODEL}")
-            print(
-                "Se recomienda usar openai:gpt-4o-mini o "
-                "openai:gpt-4-turbo"
-            )
+            print("   Se recomienda usar openai:gpt-4o-mini o "
+                  "openai:gpt-4-turbo")
 
         return True
 

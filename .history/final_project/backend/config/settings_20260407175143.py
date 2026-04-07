@@ -69,7 +69,7 @@ class Settings:
             print(f"⚠️ Advertencia: El modelo actual es {cls.AI_MODEL}")
             print(
                 "Se recomienda usar openai:gpt-4o-mini o "
-                "openai:gpt-4-turbo"
+                 "openai:gpt-4-turbo"
             )
 
         return True
