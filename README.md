@@ -5,7 +5,7 @@
 1. **Set your API Key**
    Add your API key to `backend/.env`:
    ```env
-   GEMINI_API_KEY=your_key_here
+   OPENAI_API_KEY=your_key_here
    ```
 
 2. **Run the Backend**
@@ -31,7 +31,7 @@ Este proyecto implementa un chatbot inteligente impulsado por **Pydantic AI** (m
 
 ## 🏗️ Arquitectura
 
-La solución se divide en componentes robustos:
+La solución se divide en los siguientes componentes:
 
 1. **Frontend (React + Vite + TailwindCSS)**: 
    - Provee una interfaz de usuario conversacional Premium, estéticamente diseñada con temáticas oscuras ambientales y estilos modernos.
