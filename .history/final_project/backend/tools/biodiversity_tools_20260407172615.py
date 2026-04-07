@@ -36,17 +36,9 @@ async def analyze_deforestation(
         # Si hay coordenadas, usarlas directamente
         if coordinates and "Lat:" in coordinates and "Lon:" in coordinates:
             parts = coordinates.replace(",", "").split()
-            lat = float([
-                p for p in parts if p.replace("-", "").replace(".", "").
-                isdigit()][0]
-            )
-            lon = float([
-                p for p in parts if p.replace("-", "").replace(".", "").
-                isdigit()][1]
-            )
-            result = await satellite_service.get_deforestation_alert(
-                lat, lon, days_back
-            )
+            lat = float([p for p in parts if p.replace("-", "").replace(".", "").isdigit()][0])
+            lon = float([p for p in parts if p.replace("-", "").replace(".", "").isdigit()][1])
+            result = await satellite_service.get_deforestation_alert(lat, lon, days_back)
         else:
             # Usar nombre de región
             result = await satellite_service.analyze_region(location)
@@ -58,17 +50,9 @@ async def analyze_deforestation(
                     alert_obj = alert_service.create_alert(
                         alert_type=AlertType.DEFORESTATION_DETECTED,
                         severity=AlertSeverity.HIGH,
-                        location={
-                            "name": location,
-                            "coordinates": result.get("location")
-                        },
-                        description=alert.get(
-                            "description", "Deforestación detectada"
-                        ),
-                        metadata={
-                            "source": "satellite_analysis",
-                            "raw_data": result
-                        }
+                        location={"name": location, "coordinates": result.get("location")},
+                        description=alert.get("description", "Deforestación detectada"),
+                        metadata={"source": "satellite_analysis", "raw_data": result}
                     )
                     # Enviar solo a log en modo demostración
                     await alert_service.send_alert(alert_obj, channels=['log'])
@@ -221,9 +205,8 @@ async def get_environmental_data(
         # Enrutamiento inteligente según el tipo de consulta
         query_lower = query.lower()
 
-        if ("water" in query_lower or
-                "ocean" in query_lower or
-                "marine" in query_lower):
+        if "water" in query_lower or "ocean" 
+        in query_lower or "marine" in query_lower:
             if location:
                 result = await ocean_service.get_water_quality(location)
             else:

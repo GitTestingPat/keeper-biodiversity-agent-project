@@ -36,17 +36,9 @@ async def analyze_deforestation(
         # Si hay coordenadas, usarlas directamente
         if coordinates and "Lat:" in coordinates and "Lon:" in coordinates:
             parts = coordinates.replace(",", "").split()
-            lat = float([
-                p for p in parts if p.replace("-", "").replace(".", "").
-                isdigit()][0]
-            )
-            lon = float([
-                p for p in parts if p.replace("-", "").replace(".", "").
-                isdigit()][1]
-            )
-            result = await satellite_service.get_deforestation_alert(
-                lat, lon, days_back
-            )
+            lat = float([p for p in parts if p.replace("-", "").replace(".", "").isdigit()][0])
+            lon = float([p for p in parts if p.replace("-", "").replace(".", "").isdigit()][1])
+            result = await satellite_service.get_deforestation_alert(lat, lon, days_back)
         else:
             # Usar nombre de región
             result = await satellite_service.analyze_region(location)
@@ -58,17 +50,9 @@ async def analyze_deforestation(
                     alert_obj = alert_service.create_alert(
                         alert_type=AlertType.DEFORESTATION_DETECTED,
                         severity=AlertSeverity.HIGH,
-                        location={
-                            "name": location,
-                            "coordinates": result.get("location")
-                        },
-                        description=alert.get(
-                            "description", "Deforestación detectada"
-                        ),
-                        metadata={
-                            "source": "satellite_analysis",
-                            "raw_data": result
-                        }
+                        location={"name": location, "coordinates": result.get("location")},
+                        description=alert.get("description", "Deforestación detectada"),
+                        metadata={"source": "satellite_analysis", "raw_data": result}
                     )
                     # Enviar solo a log en modo demostración
                     await alert_service.send_alert(alert_obj, channels=['log'])
@@ -221,9 +205,7 @@ async def get_environmental_data(
         # Enrutamiento inteligente según el tipo de consulta
         query_lower = query.lower()
 
-        if ("water" in query_lower or
-                "ocean" in query_lower or
-                "marine" in query_lower):
+        if "water" in query_lower or "ocean" in query_lower or "marine" in query_lower:
             if location:
                 result = await ocean_service.get_water_quality(location)
             else:
@@ -376,11 +358,9 @@ async def check_alert_status(alert_id: Optional[str] = None) -> dict:
                     "high": 0,
                     "medium": 0,
                     "low": 0},
-                "note": "Modo demostración: Las alertas se registran en "
-                "consola.Configura persistencia para producción."
+                "note": "Modo demostración: Las alertas se registran en consola. Configura persistencia para producción."
             },
-            "message": "Sistema de alertas operativo. Usa alert_id para "
-            "consultar una específica."
+            "message": "Sistema de alertas operativo. Usa alert_id para consultar una específica."
         }
 
 
@@ -394,11 +374,7 @@ async def search_biodiversity_database(
 
     Args:
         query: Término de búsqueda (especie, ecosistema, amenaza)
-        category: Categoría opcional:
-        'species',
-        'ecosystem',
-        'threat',
-        'conservation'
+        category: Categoría opcional: 'species', 'ecosystem', 'threat', 'conservation'
 
     Returns:
         Dict con resultados de búsqueda
@@ -409,46 +385,23 @@ async def search_biodiversity_database(
             "name": "Jaguar (Panthera onca)",
             "status": "Near Threatened",
             "habitat": "Américas: desde México hasta Argentina",
-            "threats": [
-                "Deforestación",
-                "Caza furtiva",
-                "Fragmentación de hábitat"
-                ],
-            "conservation_actions": [
-                "Corredores biológicos",
-                "Protección de cuencas",
-                "Monitoreo con cámaras trampa"
-                ]
+            "threats": ["Deforestación", "Caza furtiva", "Fragmentación de hábitat"],
+            "conservation_actions": ["Corredores biológicos", "Protección de cuencas", "Monitoreo con cámaras trampa"]
         },
         "amazon rainforest": {
             "name": "Amazon Rainforest",
             "type": "Tropical Rainforest Ecosystem",
             "area_km2": 5500000,
             "biodiversity": "~10% de todas las especies conocidas del planeta",
-            "threats": [
-                "Deforestación agrícola",
-                "Minería ilegal",
-                "Cambio climático"
-                ],
-            "conservation_actions": [
-                "Áreas protegidas",
-                "Monitoreo satelital",
-                "Desarrollo sostenible con comunidades"]
+            "threats": ["Deforestación agrícola", "Minería ilegal", "Cambio climático"],
+            "conservation_actions": ["Áreas protegidas", "Monitoreo satelital", "Desarrollo sostenible con comunidades"]
         },
         "coral reef": {
             "name": "Coral Reefs",
             "type": "Marine Ecosystem",
-            "global_coverage": "0.1% del océano, pero alberga ~25% "
-            "de especies marinas",
-            "threats": [
-                "Blanqueamiento por calentamiento",
-                "Acidificación oceánica",
-                "Contaminación"
-                ],
-            "conservation_actions": [
-                "Áreas marinas protegidas",
-                "Restauración de corales",
-                "Reducción de emisiones"]
+            "global_coverage": "0.1% del océano, pero alberga ~25% de especies marinas",
+            "threats": ["Blanqueamiento por calentamiento", "Acidificación oceánica", "Contaminación"],
+            "conservation_actions": ["Áreas marinas protegidas", "Restauración de corales", "Reducción de emisiones"]
         }
     }
 
@@ -463,10 +416,8 @@ async def search_biodiversity_database(
         return {
             "success": True,
             "results": [],
-            "message": f"No se encontraron resultados para '{query}'. "
-            "Prueba con: 'jaguar', 'amazon', 'coral reef'",
-            "suggestion": "Usa términos en inglés para mejores "
-            "resultados en esta demo"
+            "message": f"No se encontraron resultados para '{query}'. Prueba con: 'jaguar', 'amazon', 'coral reef'",
+            "suggestion": "Usa términos en inglés para mejores resultados en esta demo"
         }
 
     return {

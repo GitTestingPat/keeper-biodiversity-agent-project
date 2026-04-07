@@ -36,17 +36,9 @@ async def analyze_deforestation(
         # Si hay coordenadas, usarlas directamente
         if coordinates and "Lat:" in coordinates and "Lon:" in coordinates:
             parts = coordinates.replace(",", "").split()
-            lat = float([
-                p for p in parts if p.replace("-", "").replace(".", "").
-                isdigit()][0]
-            )
-            lon = float([
-                p for p in parts if p.replace("-", "").replace(".", "").
-                isdigit()][1]
-            )
-            result = await satellite_service.get_deforestation_alert(
-                lat, lon, days_back
-            )
+            lat = float([p for p in parts if p.replace("-", "").replace(".", "").isdigit()][0])
+            lon = float([p for p in parts if p.replace("-", "").replace(".", "").isdigit()][1])
+            result = await satellite_service.get_deforestation_alert(lat, lon, days_back)
         else:
             # Usar nombre de región
             result = await satellite_service.analyze_region(location)
@@ -59,16 +51,11 @@ async def analyze_deforestation(
                         alert_type=AlertType.DEFORESTATION_DETECTED,
                         severity=AlertSeverity.HIGH,
                         location={
-                            "name": location,
+                            "name": location, 
                             "coordinates": result.get("location")
-                        },
-                        description=alert.get(
-                            "description", "Deforestación detectada"
-                        ),
-                        metadata={
-                            "source": "satellite_analysis",
-                            "raw_data": result
-                        }
+                            },
+                        description=alert.get("description", "Deforestación detectada"),
+                        metadata={"source": "satellite_analysis", "raw_data": result}
                     )
                     # Enviar solo a log en modo demostración
                     await alert_service.send_alert(alert_obj, channels=['log'])

@@ -45,8 +45,7 @@ async def analyze_deforestation(
                 isdigit()][1]
             )
             result = await satellite_service.get_deforestation_alert(
-                lat, lon, days_back
-            )
+                lat, lon, days_back)
         else:
             # Usar nombre de región
             result = await satellite_service.analyze_region(location)
