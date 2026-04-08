@@ -18,6 +18,8 @@ def create_agent():
         "tools", []
         ) if isinstance(TOOLS_REGISTRY, dict) else TOOLS_REGISTRY
 
+    # create_react_agent crea un agente completo que SABE ejecutar herramientas
+    # No necesitas bucles manuales ni AgentExecutor viejo.
     agent_graph = create_react_agent(llm, tools)
 
     return agent_graph

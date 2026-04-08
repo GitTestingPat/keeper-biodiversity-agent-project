@@ -2,6 +2,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from langchain_core.messages import HumanMessage
 from config.settings import settings
 from agent import agent
 from tools import TOOLS_REGISTRY
@@ -24,24 +25,17 @@ class ChatRequest(BaseModel):
 
 @app.post("/api/chat")
 async def chat(req: ChatRequest):
+    """Endpoint de chat que ejecuta el agente con herramientas"""
     try:
-        # El agente de LangGraph espera un diccionario con "messages"
-        messages = [{"role": "user", "content": req.message}]
-
-        # Ejecutar el agente
-        result = await agent.ainvoke({"messages": messages})
-
-        # La respuesta final está en el último mensaje de la lista
-        # 'messages' del resultado
-        final_message = result["messages"][-1]
-
+        # Ejecutar el agente con el mensaje del usuario
+        response = await agent.ainvoke([HumanMessage(content=req.message)])
         return {
             "success": True,
-            "response": final_message.content
+            "response": response.content if hasattr(
+                response, 'content') else str(response),
+            "tool_calls": getattr(response, 'tool_calls', [])
         }
     except Exception as e:
-        import traceback
-        traceback.print_exc()
         return {"success": False, "error": str(e)}
 
 

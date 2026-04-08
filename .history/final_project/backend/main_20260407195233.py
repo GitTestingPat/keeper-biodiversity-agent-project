@@ -2,6 +2,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from langchain_core.messages import HumanMessage, ToolMessage
 from config.settings import settings
 from agent import agent
 from tools import TOOLS_REGISTRY
@@ -31,8 +32,7 @@ async def chat(req: ChatRequest):
         # Ejecutar el agente
         result = await agent.ainvoke({"messages": messages})
 
-        # La respuesta final está en el último mensaje de la lista
-        # 'messages' del resultado
+        # La respuesta final está en el último mensaje de la lista 'messages' del resultado
         final_message = result["messages"][-1]
 
         return {
